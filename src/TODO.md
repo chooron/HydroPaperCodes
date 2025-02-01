@@ -1,0 +1,3 @@
+- [ ] 使用ensemble ode problem training实现快速批量率定
+- [ ] 早停策略
+- [ ] 构建ENN所提出的ExpHydro模型
