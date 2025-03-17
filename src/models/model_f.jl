@@ -7,10 +7,6 @@
 using Lux
 using KolmogorovArnold
 
-
-
-
-
 function build_ET_NN(hidd_dims = 4, grid_size = 4, basis_func = rbf)
 	normalizer = tanh_fast
 	etnn = Chain(
