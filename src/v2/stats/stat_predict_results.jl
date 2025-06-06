@@ -1,6 +1,5 @@
-# 绘制直方图,比较k50-f和m50-f的预测结果
-using CSV, DataFrames, Plots, Statistics
-
+using CSV, DataFrames, Dates, Plots, Statistics
+include("../../utils/criteria.jl")
 
 function plot_model_stats(stats_df, model_name)
     # Extract metrics
@@ -53,13 +52,46 @@ function plot_model_stats(stats_df, model_name)
     return p
 end
 
-# model_name_list = ["k50_base(step)"] # "m50-p", "m50-f", "d-hbv", "k50-f", "k50-p", "hbv" "exphydro(cont2,withst)"
-# for model_name in model_name_list
-#     m50_predict_stats = CSV.read("src/result/stats/$model_name-criteria.csv", DataFrame)
-#     tmp_plot = plot_model_stats(m50_predict_stats, model_name)
-#     savefig(tmp_plot, "src/plots/$model_name-hist.png")
-# end
+function stat_predict_results(model_name)
+    base_path = "result/v2/$model_name"
+    save_path = "src/v2/stats"
+    # Get all subdirectories in m50 folder
+    subdirs = filter(isdir, readdir(base_path, join = true))
+    criteria_all = []
+
+    # Read predict_df.csv from each subdir if it exists
+    for dir in subdirs
+        train_pred_file = joinpath(dir, "train_predicted_df.csv")
+        test_pred_file = joinpath(dir, "test_predicted_df.csv")
+        station_id = basename(dir)
+        train_df = CSV.read(train_pred_file, DataFrame)
+        test_df = CSV.read(test_pred_file, DataFrame)
+
+        # Split into train and test periods
+        train_pred, train_obs = train_df[!, :val_pred], train_df[!, :obs]
+        test_pred, test_obs = test_df[!, :val_pred], test_df[!, :obs]
+
+        criteria_dict = Dict(
+            "station_id" => station_id,
+            "rmse-train" => rmse(train_obs, train_pred), "rmse-test" => rmse(test_obs, test_pred),
+            "mae-train" => mae(train_obs, train_pred), "mae-test" => mae(test_obs, test_pred),
+            "nse-train" => nse(train_obs, train_pred), "nse-test" => nse(test_obs, test_pred),
+            "mnse-train" => mnse(train_obs, train_pred), "mnse-test" => mnse(test_obs, test_pred),
+            "fhv-train" => fhv(train_obs, train_pred, h=0.01), "fhv-test" => fhv(test_obs, test_pred, h=0.01),
+            "kge-train" => kge(train_obs, train_pred), "kge-test" => kge(test_obs, test_pred),
+        )
+        push!(criteria_all, criteria_dict)
+    end
+
+    criteria_df = DataFrame(criteria_all)
+    criteria_df_name = sort(filter(x -> x != "station_id", names(criteria_df)), rev=true)
+    criteria_df = criteria_df[!, ["station_id", criteria_df_name...]]
+    CSV.write("$save_path/$model_name-criteria.csv", criteria_df)
+
+    return criteria_df
+end
+
 model_name = "k50_base"
-predict_stats = CSV.read("result/v2/$model_name/criteria.csv", DataFrame)
-tmp_plot = plot_model_stats(predict_stats, model_name)
-savefig(tmp_plot, "result/v2/plots/$model_name-hist.png")
+stats_df = stat_predict_results(model_name)
+stats_fig = plot_model_stats(stats_df, model_name)
+display(stats_fig)

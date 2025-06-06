@@ -10,7 +10,7 @@ end
 
 function load_nn_data(basin_id, model_name, basemodel_name)
 	#* load data
-	camelsus_cache = load("src/data/camelsus/$(basin_id).jld2")
+	camelsus_cache = load("data/camelsus/$(basin_id).jld2")
 	data_x, data_y, data_timepoints = camelsus_cache["data_x"], camelsus_cache["data_y"], camelsus_cache["data_timepoints"]
     train_x, train_y, train_timepoints = camelsus_cache["train_x"], camelsus_cache["train_y"], camelsus_cache["train_timepoints"]
     lday_vec, prcp_vec, temp_vec = collect(data_x[:, 1]), collect(data_x[:, 2]), collect(data_x[:, 3])
@@ -20,7 +20,7 @@ function load_nn_data(basin_id, model_name, basemodel_name)
     end
 
     #* load exphydro model outputs
-    exphydro_df = CSV.read("src/result/models/$model_name/$(basin_id)/model_outputs.csv", DataFrame)
+    exphydro_df = CSV.read("result/v2/$model_name/$(basin_id)/model_outputs.csv", DataFrame)
     snowpack_vec, soilwater_vec = exphydro_df[!, "snowpack"], exphydro_df[!, "soilwater"]
     et_vec, rainfall_vec, melt_vec = exphydro_df[!, "et"], exphydro_df[!, "pr"], exphydro_df[!, "melt"]
     et_vec[et_vec.<0] .= 0.000000001

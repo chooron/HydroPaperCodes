@@ -11,7 +11,7 @@ using Statistics
 using Printf
 import SymbolicRegression: calculate_pareto_frontier
 
-include("../utils/train.jl")
+include("train.jl")
 
 """
 	activation_getter(kan_layer, kan_params, kan_states, input_data)
@@ -50,7 +50,7 @@ end
 
 	根据激活函数的scale进行剪枝并构建新的模型和参数
 """
-function prune(kan_layers, kan_params, postacts, theta=1e-2)
+function prune_qnn(kan_layers, kan_params, postacts, theta=1e-2)
     #pruning function used to sparsify KAN-ODEs (i.e. delete negligible connections)
     #theta corresponds to gamma_pr in the manuscript (value of 1e-2)
     #not optimized - only runs a few times per training cycle, so extreme efficiency is not important
@@ -115,16 +115,9 @@ function prune_etnn(kan_layers, kan_params, postacts, theta=1e-2)
     ##re-initialize KAN, but with the smaller size
     pruned_layer_width = length(nodes_to_keep)
 
-    # Assuming the output dimension of the single layer remains the same as the original first layer's output
-    # If this is the *actual* output layer of the network, kan_layers[1].out_dims might need to be kan_layers[1].out_dims
-    # or a predefined output dimension if the pruning changes the final output shape.
-    # For now, we'll assume the intent is to prune the *internal* width of this single layer.
-    # If it's the very last layer, the output_dims should likely be fixed or taken from the original layer's out_dims.
-
     new_kan_layers = [
         KDense(kan_layers[1].in_dims, pruned_layer_width, grid_size; use_base_act=true),
         kan_layers[2]
-        # Removed second KDense layer
     ]
 
     layer_1_params = kan_params.layer_1
@@ -202,7 +195,7 @@ end
 function prune_qnn_nodes(; model_layers, layer_params, input_data, prune_threshold)
     spline_dict = obtain_qnn_splines(model_layers=model_layers, layer_params=layer_params, input_data=input_data)
     postacts1, postacts2 = spline_dict["postacts1"], spline_dict["postacts2"]
-    new_kan_layers, new_ps, nodes_to_keep, node_scores = prune(model_layers, layer_params, [postacts1, postacts2], prune_threshold)
+    new_kan_layers, new_ps, nodes_to_keep, node_scores = prune_qnn(model_layers, layer_params, [postacts1, postacts2], prune_threshold)
     return new_kan_layers, new_ps, nodes_to_keep, node_scores
 end
 

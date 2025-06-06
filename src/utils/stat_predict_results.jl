@@ -1,8 +1,8 @@
 include("../utils/criteria.jl")
 using CSV, DataFrames, Dates
 
-model_name = "k50_base"
-base_path = "src/result/models/$model_name"
+model_name = "exphydro(516)"
+base_path = "result/v2/$model_name"
 # Get all subdirectories in m50 folder
 subdirs = filter(isdir, readdir(base_path, join = true))
 criteria_all = []
@@ -17,7 +17,7 @@ for dir in subdirs
 
     # Split into train and test periods
     train_pred, train_obs = train_df[!, :pred], train_df[!, :obs]
-    test_pred, test_obs = test_df[!, :val_pred], test_df[!, :obs]
+    test_pred, test_obs = test_df[!, :pred], test_df[!, :obs]
 
     criteria_dict = Dict(
         "station_id" => station_id,
@@ -34,7 +34,6 @@ end
 criteria_df = DataFrame(criteria_all)
 criteria_df_name = sort(filter(x -> x != "station_id", names(criteria_df)), rev=true)
 criteria_df = criteria_df[!, ["station_id", criteria_df_name...]]
-
-CSV.write("src/result/stats/$model_name-criteria.csv", criteria_df)
+CSV.write("$base_path/criteria.csv", criteria_df)
 
 
