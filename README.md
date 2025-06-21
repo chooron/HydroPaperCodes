@@ -2,6 +2,8 @@
 
 Code for Paper "Exploring Kolmogorov-Arnold Neural Networks for Hybrid and Transparent Hydrological Modeling"
 
+**Notes**: new version for this project refer to https://github.com/chooron/Hydro-KAN-V1
+
 ## Project Overview
 
 This repository contains the Julia implementation of Kolmogorov-Arnold Neural Networks (KANNs) for hydrological modeling as described in the paper. The code focuses on creating hybrid and transparent hydrological models using KANNs, with comparisons to traditional hydrological models.
